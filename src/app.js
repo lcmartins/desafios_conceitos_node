@@ -1,8 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-
-// const { uuid } = require("uuidv4");
-
 const app = express();
 
 app.use(express.json());
@@ -30,19 +27,25 @@ app.post('/repositories', (request, response) => {
   return response.status(201).send(repository);
 });
 
-app.put('/repositories/:id', (request, response) => {
-  const { id } = request.params;
-
+function findRepositoryById(id) {
   const repositoryIndex = repositories.findIndex(
     (repository) => repository.id === id
   );
+  return repositoryIndex;
+}
 
+function formatNotFoundResponse(id) {
+  return `Repository with id: ${id} not found!`;
+}
+
+app.put('/repositories/:id', (request, response) => {
+  const { id } = request.params;
+  const repositoryIndex = findRepositoryById(id);
   if (repositoryIndex < 0) {
-    return response.status(404).json({
-      error: `Repository with id: ${id} not found!`,
+    return response.status(400).json({
+      error: formatNotFoundResponse(id),
     });
   }
-
   const { title, url, techs } = request.body;
 
   const repository = repositories[repositoryIndex];
@@ -55,34 +58,27 @@ app.put('/repositories/:id', (request, response) => {
 
 app.delete('/repositories/:id', (request, response) => {
   const { id } = request.params;
-
-  const repositoryIndex = repositories.findIndex(
-    (repository) => repository.id === id
-  );
-
+  const repositoryIndex = findRepositoryById(id);
   if (repositoryIndex < 0) {
-    return response.status(404).json({
+    return response.status(400).json({
       error: `Repository with id: ${id} not found!`,
     });
   }
-
   repositories.splice(repositoryIndex, 1);
+
   return response.status(204).send();
 });
 
 app.post('/repositories/:id/like', (request, response) => {
   const { id } = request.params;
-
-  const repositoryIndex = repositories.findIndex(
-    (repository) => repository.id === id
-  );
-
+  const repositoryIndex = findRepositoryById(id);
   if (repositoryIndex < 0) {
-    return response.status(404).json({
+    return response.status(400).json({
       error: `Repository with id: ${id} not found!`,
     });
   }
   const repository = repositories[repositoryIndex];
+
   repository.likes += 1;
   return response.status(200).json(repository);
 });
